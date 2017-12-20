@@ -5,7 +5,7 @@ if [ "$EUID" != "0" ]; then
   exit 1
 fi
 
-SCRIPT_NAME="rftest2"
+SCRIPT_NAME="rftest3"
 LXCDIR=/var/lib/lxc
 IPC="mongodb"
 MONGODB_CONF=/etc/mongodb.conf
@@ -15,7 +15,7 @@ CONTROLLER_PORT=6633
 if [ -d ./build ]; then
     RF_HOME=$PWD
 else
-    RF_HOME=..
+    RF_HOME=$PWD/..
 fi
 
 export PATH=$PATH:/usr/local/bin:/usr/local/sbin
@@ -64,7 +64,7 @@ reset() {
     ovs-vsctl emer-reset &> /dev/null;
 
     echo_bold "-> Stopping and resetting LXC VMs...";
-    for vm in "rfvmA" "rfvmB" "rfvmC" "rfvmD"
+    for vm in "rfrrvmA" "rfrrvmB" "rfrrvmC" "rfrrvmD"
     do
         lxc-stop -n $vm
         rm -rf $LXCDIR/$vm/rootfs/var/run/network/ifstate;
@@ -79,10 +79,10 @@ reset() {
         db.getCollection('rfserver<->rfproxy').drop();
     "
         
-    rm -rf /var/lib/lxc/rfvmA/rootfs/opt/rfclient;
-    rm -rf /var/lib/lxc/rfvmB/rootfs/opt/rfclient;
-    rm -rf /var/lib/lxc/rfvmC/rootfs/opt/rfclient;
-    rm -rf /var/lib/lxc/rfvmD/rootfs/opt/rfclient;
+    rm -rf $LXCDIR/rfrrvmA/rootfs/opt/rfclient;
+    rm -rf $LXCDIR/rfrrvmB/rootfs/opt/rfclient;
+    rm -rf $LXCDIR/rfrrvmC/rootfs/opt/rfclient;
+    rm -rf $LXCDIR/rfrrvmD/rootfs/opt/rfclient;
 }
 reset 1
 trap "reset 0; exit 0" INT
@@ -98,40 +98,41 @@ if [ $IPC = "mongodb" ]; then
 fi
 
 echo_bold "-> Starting RFServer..."
-nice -n 20 ./rfserver/rfserver.py ../rftest/rftest2config.csv &
+nice -n 20 rfserver/rfserver.py rftest/rftest2config.csv &
 
 echo_bold "-> Configuring the virtual machines..."
 
-for vm in rfvmA rfvmB rfvmC rfvmD; do
-    mkdir "/var/lib/lxc/$vm/rootfs/opt/rfclient"
-    cp ../rfclient/rfclient "/var/lib/lxc/$vm/rootfs/opt/rfclient/rfclient"
+for vm in rfrrvmA rfrrvmB rfrrvmC rfrrvmD
+do
+    mkdir -p "$LXCDIR/$vm/rootfs/opt/rfclient"
+    cp rfclient/rfclient "$LXCDIR/$vm/rootfs/opt/rfclient/rfclient"
 
     # We sleep for a few seconds to wait for the interfaces to go up
-    cat <<EOF > "/var/lib/lxc/$vm/rootfs/root/run_rfclient.sh"
+    cat <<EOF > "$LXCDIR/$vm/rootfs/root/run_rfclient.sh"
 #!/bin/sh
 sleep 3
-/etc/init.d/quagga start
+/etc/init.d/frr start
 /opt/rfclient/rfclient 2>&1 >/var/log/rfclient.log
 EOF
-    chmod +x "/var/lib/lxc/$vm/rootfs/root/run_rfclient.sh"
+    chmod +x "$LXCDIR/$vm/rootfs/root/run_rfclient.sh"
 
     echo_bold "-> Starting the virtual machine $vm..."
     lxc-start -n "$vm" -d
 done
 
 echo_bold "-> Starting the controller and RFPRoxy..."
-ryu-manager --use-stderr --ofp-tcp-listen-port=$CONTROLLER_PORT ryu-rfproxy/rfproxy.py &
+ryu-manager --use-stderr --ofp-tcp-listen-port=$CONTROLLER_PORT $RF_HOME/ryu-rfproxy/rfproxy.py &
 wait_port_listen $CONTROLLER_PORT
 
 echo_bold "-> Starting the control plane network (dp0 VS)..."
 ovs-vsctl add-br dp0
 for i in 1 2 3; do
-    for vm in rfvmA rfvmB rfvmC rfvmD; do
+    for vm in rfrrvmA rfrrvmB rfrrvmC rfrrvmD; do
         ovs-vsctl add-port dp0 "$vm.$i"
     done
 done
-ovs-vsctl add-port dp0 rfvmA.4
-ovs-vsctl add-port dp0 rfvmD.4
+ovs-vsctl add-port dp0 rfrrvmA.4
+ovs-vsctl add-port dp0 rfrrvmD.4
 ovs-vsctl set Bridge dp0 other-config:datapath-id=7266767372667673
 ovs-vsctl set-controller dp0 tcp:127.0.0.1:$CONTROLLER_PORT
 ovs-vsctl set Bridge dp0 protocols=OpenFlow13

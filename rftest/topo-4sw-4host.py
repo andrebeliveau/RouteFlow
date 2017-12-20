@@ -40,10 +40,10 @@ class rftest2(Topo):
                           ip="172.31.4.100/24",
                           defaultRoute="gw 172.31.4.1")
 
-        sA = self.addSwitch("s5")
-        sB = self.addSwitch("s6")
-        sC = self.addSwitch("s7")
-        sD = self.addSwitch("s8")
+        sA = self.addSwitch("s5", protocols=["OpenFlow13"])
+        sB = self.addSwitch("s6", protocols=["OpenFlow13"])
+        sC = self.addSwitch("s7", protocols=["OpenFlow13"])
+        sD = self.addSwitch("s8", protocols=["OpenFlow13"])
 
         self.addLink(h1, sA)
         self.addLink(h2, sB)

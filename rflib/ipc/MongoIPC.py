@@ -55,7 +55,7 @@ class MongoIPCMessageService(IPC.IPCMessageService):
         self._db = db
         self.address = format_address(address)
         self._id = id_
-        self._producer_connection = mongo.Connection(*self.address)
+        self._producer_connection = mongo.MongoClient(*self.address)
         self._threading = threading_
         
     def listen(self, channel_id, factory, processor, block=True):
@@ -72,7 +72,7 @@ class MongoIPCMessageService(IPC.IPCMessageService):
         return True
 
     def _listen_worker(self, channel_id, factory, processor):
-        connection = mongo.Connection(*self.address)
+        connection = mongo.MongoClient(*self.address)
         self._create_channel(connection, channel_id)
         
         collection = connection[self._db][channel_id]

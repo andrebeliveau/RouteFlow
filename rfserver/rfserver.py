@@ -10,6 +10,8 @@ import time
 import copy
 import Queue
 import threading
+import sys
+sys.path.append("../")
 
 from bson.binary import Binary
 

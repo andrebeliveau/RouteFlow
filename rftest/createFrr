@@ -7,7 +7,7 @@ fi
 
 LXCDIR="/var/lib/lxc"
 CONFIG="config"
-BASEDIR="baseQuagga"
+BASEDIR="baseFrr"
 
 # Setup LXC and base container
 apt-get -y --force-yes install lxc
@@ -15,15 +15,21 @@ mkdir -p $LXCDIR
 lxc-create -t ubuntu -n $BASEDIR || exit 1
 
 cp -f /etc/resolv.conf $LXCDIR/$BASEDIR/rootfs/etc
+cp frr_3.0.2-1-ubuntu14.04.1_amd64.deb $LXCDIR/$BASEDIR/rootfs/home/ubuntu/
+
 
 chroot $LXCDIR/$BASEDIR/rootfs apt-get update
 # !!!
 # ADD THE PACKETS YOU NEED TO INSTALL HERE
 # !!!
-chroot $LXCDIR/$BASEDIR/rootfs apt-get -y --force-yes install quagga \
+chroot $LXCDIR/$BASEDIR/rootfs apt-get -y --force-yes install \
     libboost-thread-dev libboost-system-dev libboost-filesystem-dev \
     libboost-program-options-dev libnl-3-dev libnl-route-3-dev \
-    rsyslog vlan tcpdump telnet iperf
+    rsyslog vlan tcpdump telnet iperf libc-ares2
+chroot $LXCDIR/$BASEDIR/rootfs dpkg -i /home/ubuntu/frr_3.0.2-1-ubuntu14.04.1_amd64.deb
+chroot $LXCDIR/$BASEDIR/rootfs apt-get install -f
+
+
 # !!!
 
 if [ -e /usr/local/lib/libzmq.so ]; then
@@ -33,7 +39,7 @@ fi
 
 # Clone the base container to make other containers based on config
 cd $CONFIG
-for VM in b1 b2 rfvmA rfvmB rfvmC rfvmD
+for VM in rfrrvmA rfrrvmB rfrrvmC rfrrvmD
 do
     lxc-clone -o $BASEDIR -n $VM
     cp -R $VM/* $LXCDIR/$VM

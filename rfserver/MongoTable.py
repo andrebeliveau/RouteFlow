@@ -7,7 +7,7 @@ class MongoTable:
     def __init__(self, name, address=MONGO_ADDRESS):
         self.name = name
         self.address = format_address(address)
-        self.connection = mongo.Connection(*self.address)
+        self.connection = mongo.MongoClient(*self.address)
         self.data = self.connection[MONGO_DB_NAME][name]
 
     def get_dicts(self, **kwargs):

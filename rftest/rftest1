@@ -142,7 +142,7 @@ if [ "$ACTION" != "RESET" ]; then
     mkdir /var/lib/lxc/rfvm1/rootfs/opt/rfclient
 
     # Copy the rfclient executable
-    cp build/rfclient /var/lib/lxc/rfvm1/rootfs/opt/rfclient/rfclient
+    cp ../rfclient/rfclient /var/lib/lxc/rfvm1/rootfs/opt/rfclient/rfclient
 
     # We sleep for a few seconds to wait for the interfaces to go up
     echo "#!/bin/sh" > /var/lib/lxc/rfvm1/rootfs/root/run_rfclient.sh
@@ -160,7 +160,7 @@ if [ "$ACTION" != "RESET" ]; then
     wait_port_listen $CONTROLLER_PORT
 
     echo_bold "-> Starting RFServer..."
-    ./rfserver/rfserver.py rftest/rftest1config.csv &
+    ./rfserver/rfserver.py ./rftest1config.csv &
 
     echo_bold "-> Starting the control plane network (dp0 VS)..."
     ovs-vsctl add-br dp0

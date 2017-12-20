@@ -3,10 +3,10 @@ bin_PROGRAMS = rfclient
 rfclient_CXXFLAGS = -I$(top_srcdir)/rflib -I$(top_builddir)/rflib/bson @AM_CXXFLAGS@
 AM_LDFLAGS = -lrt -lutil @AM_LDFLAGS@
 if USE_MONGO
-AM_LDFLAGS += -lmongoclient
+AM_LDFLAGS += -lmongoclient -lpthread -lssl -lcrypto
 else
 if !LOCAL_BSON
-AM_LDFLAGS += -lmongoclient
+AM_LDFLAGS += -lmongoclient -lpthread -lssl -lcrypto
 endif
 endif
 
