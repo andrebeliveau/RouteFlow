@@ -1,0 +1,33 @@
+# Common configuration
+lxc.include = /usr/share/lxc/config/ubuntu.common.conf
+
+
+lxc.utsname = rfrrvmD
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.hwaddr = 02:d0:d0:d0:d0:d0
+lxc.network.link=lxcbr0
+
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.veth.pair = rfrrvmD.1
+lxc.network.hwaddr = 02:d1:d1:d1:d1:d1
+
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.veth.pair = rfrrvmD.2
+lxc.network.hwaddr = 02:d2:d2:d2:d2:d2
+
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.veth.pair = rfvmD.3
+lxc.network.hwaddr = 02:d3:d3:d3:d3:d3
+
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.veth.pair = rfrrvmD.4
+lxc.network.hwaddr = 02:d4:d4:d4:d4:d4
+
+lxc.rootfs = /var/lib/lxc/rfrrvmD/rootfs
+lxc.mount  = /var/lib/lxc/rfrrvmD/fstab
+lxc.arch = amd64
