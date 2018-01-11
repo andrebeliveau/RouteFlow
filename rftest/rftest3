@@ -106,7 +106,7 @@ for vm in rfrrvmA rfrrvmB rfrrvmC rfrrvmD
 do
     mkdir -p "$LXCDIR/$vm/rootfs/opt/rfclient"
     cp rfclient/rfclient "$LXCDIR/$vm/rootfs/opt/rfclient/rfclient"
-
+    mkdir -p $XLCDIR/$vm/rootfs/root
     # We sleep for a few seconds to wait for the interfaces to go up
     cat <<EOF > "$LXCDIR/$vm/rootfs/root/run_rfclient.sh"
 #!/bin/sh
