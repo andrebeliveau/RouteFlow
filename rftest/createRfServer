@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if [ "$EUID" != "0" ]; then
+  echo "You must be root to run this script. Sorry, dude!"
+  exit 1
+fi
+
+LXCDIR="/var/lib/lxc"
+BASEDIR="rfserver"
+apt-get -y --force-yes install lxc
+mkdir -p $LXCDIR
+lxc-create -t ubuntu -n $BASEDIR || exit 1
+cp -r config/rfserver/*  $LXCDIR/$BASEDIR/.
+
+chroot $LXCDIR/$BASEDIR/rootfs apt-get -y install \
+    apt-transport-https 
+
+chroot $LXCDIR/$BASEDIR/rootfs apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+chroot $LXCDIR/$BASEDIR/rootfs echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.6 multiverse" |chroot $LXCDIR/$BASEDIR/rootfs tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+chroot $LXCDIR/$BASEDIR/rootfs apt-get update
+chroot $LXCDIR/$BASEDIR/rootfs apt-get install -y mongodb-org
+
+chroot $LXCDIR/$BASEDIR/rootfs apt-get -y install \
+    python-pip python-dev
+
+
+cp -f /etc/resolv.conf $LXCDIR/$BASEDIR/rootfs/etc/.
+
+mkdir -p $LXCDIR/$BASEDIR/rootfs/rfserver
+cp -r ../rfserver/* $LXCDIR/$BASEDIR/rootfs/rfserver/.
+
+mkdir -p $LXCDIR/$BASEDIR/rootfs/ryu-rfproxy
+cp -r ../ryu-rfproxy/* $LXCDIR/$BASEDIR/rootfs/ryu-rfproxy/.
+
+mkdir -p $LXCDIR/$BASEDIR/rootfs/usr/lib/python2.7/dist-packages/rflib
+cp -r ../rflib/* $LXCDIR/$BASEDIR/rootfs/usr/lib/python2.7/dist-packages/rflib/.
+
+mkdir -p $LXCDIR/$BASEDIR/rootfs/rftest
+cp -r rftest2config.csv $LXCDIR/$BASEDIR/rootfs/rftest/.
+cp -r config/rfserver/* $LXCDIR/$BASEDIR/.
+
+chroot $LXCDIR/$BASEDIR/rootfs pip install webob tinyrpc routes ovs netaddr  msgpack-python greenlet eventlet 
+chroot $LXCDIR/$BASEDIR/rootfs pip install oslo.config ryu repoze.lru greenlet pymongo
+
