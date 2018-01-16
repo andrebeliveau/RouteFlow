@@ -1,0 +1,22 @@
+#!/bin/sh
+wait_port_listen() {
+    port=$1
+    while ! `nc -z localhost $port` ; do
+        echo -n .
+        sleep 1
+    done
+}
+service ssh restart;
+echo "ssh service started ....";
+MONGODB_CONF=/etc/mongodb.conf
+MONGODB_PORT=27017
+MONGODB_ADDR=192.168.10.1
+CONTROLLER_PORT=6633
+#apt-get install --force-yes -y mongodb-org
+#sed -i "/bind_ip/c\bind_ip = 127.0.0.1,$MONGODB_ADDR" $MONGODB_CONF
+#mongod --config /etc/mongod.conf --bind_ip_all&
+service mongod restart
+wait_port_listen $MONGODB_PORT
+
+nice -n 20 rfserver/rfserver.py rftest/rftest2config.csv &
+ryu-manager --use-stderr --ofp-tcp-listen-port=$CONTROLLER_PORT ryu-rfproxy/rfproxy.py &
