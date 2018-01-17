@@ -89,12 +89,14 @@ class MongoIPCMessageService(IPC.IPCMessageService):
     def _create_channel(self, connection, name):
         db = connection[self._db]
         try:
-            collection = mongo.collection.Collection(db, name, None, True, capped=True, size=CC_SIZE)
+            #collection = mongo.collection.Collection(db, name, None, True, capped=True, size=CC_SIZE)
+            collection = mongo.collection.Collection(db, name, create= True)
             collection.ensure_index([("_id", mongo.ASCENDING)])
             collection.ensure_index([(TO_FIELD, mongo.ASCENDING)])
         # TODO: improve this catch. It should be more specific, but pymongo
         # behavior doesn't match its documentation, so we are being dirty.
         except:
+            print "OUCH"
             pass
 
 def buildIPC(role, id_, threading_):

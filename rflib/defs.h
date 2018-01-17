@@ -1,7 +1,7 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
-#define MONGO_ADDRESS "192.168.10.1:27017"
+#define MONGO_ADDRESS "192.168.2.157:27017"
 #define MONGO_DB_NAME "db"
 
 #define ZEROMQ_ADDRESS "tcp://192.168.10.1:25555"
