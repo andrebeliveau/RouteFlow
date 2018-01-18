@@ -101,16 +101,17 @@ bool RFClient::findInterface(const char *ifName, Interface *dst) {
 RFClient::RFClient(uint64_t id, const string &address, RouteSource source) {
     this->rm_outstanding = 0;
     this->id = id;
-
+    printf("ici 1");
     string id_str = to_string<uint64_t>(id);
     syslog(LOG_INFO, "Starting RFClient (vm_id=%s)", id_str.c_str());
     ipc = IPCMessageServiceFactory::forClient(address, id_str);
+    printf("ici 2");
     this->ifacesMap = this->load_interfaces();
     syslog(LOG_INFO, "loaded %lu interfaces", this->ifacesMap.size());
     if (this->ifacesMap.size() == 0) {
         exit(-1);
     }
-
+    printf("ici 3");
     {
         std::vector<IPAddress> ip_addresses;
         boost::lock_guard<boost::mutex> lock(this->ifMutex);
@@ -127,12 +128,13 @@ RFClient::RFClient(uint64_t id, const string &address, RouteSource source) {
             }
         }
     }
-
+    printf("ici 5");
     this->startFlowTable(source);
+    printf("ici 6");
     this->startPortMapper();
-
+    printf("ici 7");
     ipc->listen(RFCLIENT_RFSERVER_CHANNEL, this, this, false);
-
+    printf("ici 8");
     for (;;) {
        bool flow_control = false;
        {
@@ -145,6 +147,7 @@ RFClient::RFClient(uint64_t id, const string &address, RouteSource source) {
           usleep(100);
           continue;
        }
+           printf("ici 9 in loop");
        RouteMod rm;
        this->rm_q.wait_and_pop(rm);
        this->ipc->send(RFCLIENT_RFSERVER_CHANNEL, RFSERVER_ID, rm);
@@ -353,24 +356,30 @@ uint32_t RFClient::get_port_number(string ifName, bool *physical, uint32_t *vlan
 map<string, Interface> RFClient::load_interfaces() {
     struct ifaddrs *ifaddr, *ifa;
     map<string, Interface> interfaces;
-
+    printf("toto 1");
     if (getifaddrs(&ifaddr) == -1) {
         char error[BUFSIZ];
         strerror_r(errno, error, BUFSIZ);
         syslog(LOG_ERR, "getifaddrs: %s", error);
+        printf("toto 2");
         return interfaces;
     }
 
+printf("toto 3");
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        printf("LOOP:%s",ifa->ifa_name);
         if (ifa->ifa_addr->sa_family != AF_PACKET) {
+            printf("toto 4 %d",ifa->ifa_addr->sa_family);
             continue;
         }
 
-        if (strncmp(ifa->ifa_name, "eth", strlen("eth")) != 0) {
+       /* if (strncmp(ifa->ifa_name, "eth", strlen("eth")) != 0) {
+            printf("toto 5");
             continue;
         }
-
+*/
         if (strcmp(ifa->ifa_name, DEFAULT_RFCLIENT_INTERFACE) == 0) {
+            printf("toto 6");
             continue;
         }
 
@@ -383,10 +392,12 @@ map<string, Interface> RFClient::load_interfaces() {
             syslog(LOG_INFO, 
                    "Cannot get port number for %s, ignoring\n",
                    ifaceName.c_str());
+                   printf("toto 7");
             continue;
         }
 
         while (is_interface_running(ifaceName.c_str()) <= 0) {
+           printf("toto 8");
            syslog(LOG_INFO,
                   "Waiting for %s to come up\n",
                   ifaceName.c_str());
@@ -403,14 +414,17 @@ map<string, Interface> RFClient::load_interfaces() {
         interface.active = false;
         interface.physical = physical;
         interface.vlan = vlan;
+    printf("toto 9");
     }
-
+printf("toto 10");
     map<string, Interface>::iterator it;
     char ip_addr[NI_MAXHOST];
 
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        printf("toto 10.1 %s",ifa->ifa_name);
         it = interfaces.find(ifa->ifa_name);
         if (it == interfaces.end()) {
+            printf("toto 11");
             continue;
         }
         if (ifa->ifa_addr->sa_family == AF_INET) {
@@ -429,7 +443,7 @@ map<string, Interface> RFClient::load_interfaces() {
             it->second.addresses.push_back(IPAddress(IPV6, ip_addr));           
         }
     }
-
+printf("toto 12");
     freeifaddrs(ifaddr);
 
     for (it = interfaces.begin(); it != interfaces.end(); ++it) {
@@ -439,7 +453,7 @@ map<string, Interface> RFClient::load_interfaces() {
             syslog(LOG_INFO, "interface %s has IP address %s", it->first.c_str(), ip_it->toString().c_str());
         }
     }
-
+printf("toto exit");
     return interfaces;
 }
 
@@ -490,6 +504,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    printf("ALLO");
     openlog("rfclient", LOG_NDELAY | LOG_NOWAIT | LOG_PID, SYSLOGFACILITY);
     RFClient s(id, address, route_source);
 

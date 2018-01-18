@@ -89,24 +89,6 @@ reset() {
 
 echo_bold "-> Setting up the management bridge (lxcbr0)..."
 #ifconfig lxcbr0 $MONGODB_ADDR up
-for vm in rfrrvmA rfrrvmB rfrrvmC rfrrvmD
-do
-    mkdir -p "$LXCDIR/$vm/rootfs/opt/rfclient"
-    cp rfclient/rfclient "$LXCDIR/$vm/rootfs/opt/rfclient/rfclient"
-    mkdir -p $XLCDIR/$vm/rootfs/root
-    # We sleep for a few seconds to wait for the interfaces to go up
-    cat <<EOF > "$LXCDIR/$vm/rootfs/root/run_rfclient.sh"
-#!/bin/sh
-sleep 3
-/etc/init.d/frr start
-/opt/rfclient/rfclient 2>&1 >/var/log/rfclient.log
-EOF
-    chmod +x "$LXCDIR/$vm/rootfs/root/run_rfclient.sh"
-
-    echo_bold "-> Starting the virtual machine $vm..."
-    lxc-start -n "$vm" -d
-done
-
 
 echo_bold "-> Starting the control plane network (dp0 VS)..."
 ovs-vsctl add-br dp0
